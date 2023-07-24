@@ -111,7 +111,7 @@ class node_transition:
             return [parent_node]
         else:
             new_reason_chains = [output.text for output in outputs]
-            #print("new_reason_chains: ", new_reason_chains)
+            # print("new_reason_chains: ", new_reason_chains)
             confidences = [self.get_confidence(output) for output in outputs]
             children = []
             dict_chains = {}
@@ -149,7 +149,7 @@ class node_transition:
                         new_node.parent = parent_node
                     new_node.reward = confidence
                     children.append(new_node)
-            #print("\n\n\n")
+            # print("\n\n\n")
             # parent_node.children = children_
 
             if not (self.prompt_style in ["struct", "struct_min", "cot_step"]):
@@ -191,6 +191,7 @@ class node_transition:
                                                       batch_chains=batch_chains,
                                                       positive_token_id=self.Aid,
                                                       negative_token_id=self.Bid,
+                                                      step_nums=[step] * len(batch_chains),
                                                       substep_num=substep_num,
                                                       reward_types=self.reward_types)
 
@@ -259,8 +260,8 @@ class node_transition:
 
         batch_children = []
         for prompt, node, prompt_state_dict in zip(prompt_states, nodes, prompt_state_dicts):
-            #print("parent prompt state: ", prompt_state_dict["prompt_state"])
-            #print("\n\n")
+            # print("parent prompt state: ", prompt_state_dict["prompt_state"])
+            # print("\n\n")
             children = self.child_format(parent_node=node,
                                          outputs=prompt2pred[prompt],
                                          unique=unique,

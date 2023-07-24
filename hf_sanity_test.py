@@ -65,8 +65,8 @@ print(model.hf_device_map)
 model.eval()
 model = torch.compile(model)
 
-question_prompts = ["2+2=4.\nIs the last reasoning step correct?\n(A) Yes\n(B) No\n",
-                    "2+2=5.\nIs the last reasoning step correct?\n(A) Yes\n(B) No\n",
+question_prompts = ["2+2=4.\nIs the last step correct?\n(A) Yes\n(B) No\n",
+                    "2+2=5.\nIs the last step correct?\n(A) Yes\n(B) No\n",
                     "2+2=4.\nIs the last reasoning step incorrect?\n(A) Yes\n(B) No\n",
                     "2+2=5.\nIs the last reasoning step incorrect?\n(A) Yes\n(B) No\n",
                     "2+2=4.\nIs the last calculation step correct?\n(A) Yes\n(B) No\n",
@@ -77,8 +77,8 @@ question_prompts = ["2+2=4.\nIs the last reasoning step correct?\n(A) Yes\n(B) N
                     "2+2=5.\nIs the last calculation/reasoning step correct?\n(A) Yes\n(B) No\n",
                     "2+2=4.\nIs the last calculation/reasoning step incorrect?\n(A) Yes\n(B) No\n",
                     "2+2=5.\nIs the last calculation/reasoning step incorrect?\n(A) Yes\n(B) No\n",
-                    "Given: P, P => Q. Therefore: Q.\nIs the last reasoning step correct?\n(A) Yes\n(B) No\n",
-                    "Given: Q, P => Q. Therefore: P.\nIs the last reasoning step correct?\n(A) Yes\n(B) No\n",
+                    "Given: P, P => Q. Therefore: Q.\nIs the last step correct?\n(A) Yes\n(B) No\n",
+                    "Given: Q, P => Q. Therefore: P.\nIs the last step correct?\n(A) Yes\n(B) No\n",
                     "Given: P, P => Q. Therefore: Q.\nIs the last reasoning step incorrect?\n(A) Yes\n(B) No\n",
                     "Given: Q, P => Q. Therefore: P.\nIs the last reasoning step incorrect?\n(A) Yes\n(B) No\n",
                     "Given: P, P => Q. Therefore: Q.\nIs the last calculation step correct?\n(A) Yes\n(B) No\n",

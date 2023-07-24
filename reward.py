@@ -1,42 +1,60 @@
 import math
 from model import generator as generator_class
 from typing import List, Tuple
+from string import Template
 
 
-def format_prompt(chains: List[str], eval_prompt: str) -> str:
-    return chains.strip() + eval_prompt
+def format_prompt(chains: List[str], step_num: int, eval_prompt: str, prompt_style: str) -> str:
+    if prompt_style in ["struct", "struct_min", "cot_step"]:
+        return chains.strip() + eval_prompt.substitute(step=step_num)
+    else:
+        return chains.strip() + eval_prompt
+
 
 def batch_evaluate(generator: generator_class,
                    prompt_style: str,
                    batch_chains: List[List[str]],
                    positive_token_id: int, negative_token_id: int,
                    substep_num: int,
+                   step_nums: List[int],
                    reward_types: str = "both") -> Tuple[List[float], int]:
     batch_prompt_state = ["".join(chains) for chains in batch_chains]
     b = len(batch_prompt_state)
 
     if prompt_style in ["struct", "struct_min"]:
-        helpfulness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n"\
-                      "# Is solving the last subproblem helpful in making progress towards solving the main problem?\n" \
-                      "# (A) Yes.\n# (B) No.\n# Answer: ("
-        correctness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n"\
-                      "# Is the last calculation/reasoning step correct?\n" \
-                      "# (A) Yes.\n# (B) No.\n# Answer: ("
+        helpfulness = Template(
+            "\n\n# Let us pause for a moment and evaluate the last subproblem (in STEP $step) before we proceed further.\n" \
+            "# Is solving the last subproblem (in STEP $step) helpful in making a progress towards solving the main problem?\n" \
+            "# (A) Yes.\n# (B) No.\n# Answer: (")
+        correctness = Template(
+            "\n\n# Let us pause for a moment and evaluate the last solution (in STEP $step) before we proceed further.\n" \
+            "# Is the last solution (in STEP $step) correct?\n" \
+            "# (A) Yes.\n# (B) No.\n# Answer: (")
         if substep_num == 0:
             eval_prompts = [helpfulness]
         else:
             eval_prompts = [correctness]
         batch_prompt_states = [batch_prompt_state]
     else:
-        helpfulness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n"\
-                      "Question: Is the last step helpful?\n" \
-                      "# (A) Yes.\n# (B) No.\n# Answer: ("
-        correctness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n"\
-                      "# Question: Is the last calculation/reasoning step correct?\n" \
-                      "# (A) Yes.\n# (B) No.\n# Answer: ("
+        if prompt_style == "cot_step":
+            helpfulness = Template(
+                "\n\n# Let us pause for a moment and evaluate the last step (Step $step) before we proceed further.\n" \
+                "Question: Is the last step (Step $step) helpful?\n" \
+                "# (A) Yes.\n# (B) No.\n# Answer: (")
+            correctness = Template(
+                "\n\n# Let us pause for a moment and evaluate the last step (Step $step) before we proceed further.\n" \
+                "# Question: Is the last step (Step $step) correct?\n" \
+                "# (A) Yes.\n# (B) No.\n# Answer: (")
+        else:
+            helpfulness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n" \
+                          "Question: Is the last step helpful?\n" \
+                          "# (A) Yes.\n# (B) No.\n# Answer: ("
+            correctness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n" \
+                          "# Question: Is the last step correct?\n" \
+                          "# (A) Yes.\n# (B) No.\n# Answer: ("
 
-        #batch_prompt_states = [batch_prompt_state]
-        #eval_prompts = [correctness]
+        # batch_prompt_states = [batch_prompt_state]
+        # eval_prompts = [correctness]
         if "both" in reward_types:
             eval_prompts = [helpfulness, correctness]
             batch_prompt_states = [batch_prompt_state, batch_prompt_state]
@@ -49,12 +67,12 @@ def batch_evaluate(generator: generator_class,
         else:
             raise ValueError("Invalid Reward Types")
 
-
     full_batch_prompt_states = []
     for eval_prompt, batch_prompt_state in zip(eval_prompts, batch_prompt_states):
-        full_batch_prompt_states += [format_prompt(chains, eval_prompt) for chains in batch_prompt_state]
+        full_batch_prompt_states += [format_prompt(chains, step_num, eval_prompt, prompt_style) \
+                                     for step_num, chains in zip(step_nums, batch_prompt_state)]
 
-    #print("full_batch_prompt_states: ")
+    # print("full_batch_prompt_states: ")
 
     batch_outputs = generator.generate(prompt=full_batch_prompt_states,
                                        max_length=1,
