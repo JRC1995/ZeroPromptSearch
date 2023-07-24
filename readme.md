@@ -188,10 +188,10 @@ The MCQs used for different prompts and different reward types for self-evaluati
 
 Several types of answer voting mechanisms are implemented and automatically tracked simultaneously in ```main.py``` (not related to any ```argparse.py``` options). They are:
 
-1. Majority Voting (```Voted Answer``` in logs) - Just simple majority voting [1].
-2. Reward Voting (```Reward Voted Answer``` in logs) - Similar to majority votings, but the value of each vote is the reward of the corresponding answer path rather than just 1 for all,
-3. Top K Reward Voting (```Top K Reward Voted Answer``` in logs) - Selects Top K (we use K=5) highest rewarded answers then apply reward voting among them. This allows filtering potentially "bad" low-reward answers which can potentially add up to votes.
-4. Max Reward (```Max Reward Answer``` in logs) - Selects the answer with the maximum reward.
+1. **Majority Voting** (```Voted Answer``` in logs) - Just simple majority voting [1].
+2. **Reward Voting** (```Reward Voted Answer``` in logs) - Similar to majority voting, but the value of each vote is the reward of the corresponding answer path rather than just 1 for all,
+3. **Top K Reward Voting** (```Top K Reward Voted Answer``` in logs) - Selects Top K (we use K=5) highest rewarded answers then apply reward voting among them. This allows filtering potentially "bad" low-reward answers which can potentially add up to votes.
+4. **Max Reward** (```Max Reward Answer``` in logs) - Selects the answer with the maximum reward.
 
 ### Limitations
 
