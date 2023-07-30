@@ -24,11 +24,11 @@ def batch_evaluate(generator: generator_class,
     if prompt_style in ["struct", "struct_min"]:
         helpfulness = Template(
             "\n\n# Let us pause for a moment and evaluate the last subproblem (in STEP $step) before we proceed further.\n" \
-            "# Is solving the last subproblem (in STEP $step) helpful in making a progress towards solving the main problem?\n" \
+            "# Question: Is solving the last subproblem (in STEP $step) helpful in making a progress towards solving the main problem?\n" \
             "# (A) Yes.\n# (B) No.\n# Answer: (")
         correctness = Template(
             "\n\n# Let us pause for a moment and evaluate the last solution (in STEP $step) before we proceed further.\n" \
-            "# Is the last solution (in STEP $step) correct?\n" \
+            "# Question: Is the last solution (in STEP $step) correct?\n" \
             "# (A) Yes.\n# (B) No.\n# Answer: (")
         if substep_num == 0:
             eval_prompts = [helpfulness]
@@ -39,7 +39,7 @@ def batch_evaluate(generator: generator_class,
         if prompt_style == "cot_step":
             helpfulness = Template(
                 "\n\n# Let us pause for a moment and evaluate the last step (Step $step) before we proceed further.\n" \
-                "Question: Is the last step (Step $step) helpful?\n" \
+                "# Question: Is the last step (Step $step) helpful?\n" \
                 "# (A) Yes.\n# (B) No.\n# Answer: (")
             correctness = Template(
                 "\n\n# Let us pause for a moment and evaluate the last step (Step $step) before we proceed further.\n" \
@@ -47,7 +47,7 @@ def batch_evaluate(generator: generator_class,
                 "# (A) Yes.\n# (B) No.\n# Answer: (")
         else:
             helpfulness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n" \
-                          "Question: Is the last step helpful?\n" \
+                          "# Question: Is the last step helpful?\n" \
                           "# (A) Yes.\n# (B) No.\n# Answer: ("
             correctness = "\n\n# Let us pause for a moment and evaluate the last step before we proceed further.\n" \
                           "# Question: Is the last step correct?\n" \
