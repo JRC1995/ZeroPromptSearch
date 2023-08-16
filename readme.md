@@ -4,7 +4,7 @@ This is more of an experimental/research projects. It implements a prompting pip
 
 ### Credits:
 
-Some of the data-extraction/answer-extraction codes (```utils.py``` and ``answer_extraction.py```) are adapted from: https://github.com/AGI-Edgerunners/Plan-and-Solve-Prompting
+Some of the data-extraction/answer-extraction codes (```utils.py``` and ```answer_extraction.py```) are adapted from: https://github.com/AGI-Edgerunners/Plan-and-Solve-Prompting
 
 Dataset References:
 * GSM8K:
