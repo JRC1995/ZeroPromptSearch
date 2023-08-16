@@ -180,7 +180,7 @@ Different types of reward types and combos are available as arguments in ```argp
 * ```confidence+helpfulness``` - Uses both ```confidence``` and ```helpfulness```.
 * ```confidence+both``` - Uses all of ```confidence```, ```correctness```, and ```helpfulness```.
 
-NB: Prompt styles ```struct``` and ```struct-min``` follow different rules. They have fine-grained substep structures and use rewards appropriate for those. The subproblem identification substep only uses helpfulness-related reward (because it's technically isn't a reasoning step to be correct/incorrect) and the solution step only uses the correctness-related question (because presumably the subproblem helpfulness will correlate with the helpfulness of the solution).
+NB: Prompt styles ```struct``` and ```struct-min``` follow different rules. They have fine-grained substep structures and use rewards appropriate for those. The subproblem identification substep only uses helpfulness-related reward (because it technically isn't a reasoning step to be correct/incorrect) and the solution step only uses the correctness-related question (because presumably, the subproblem helpfulness will correlate with the helpfulness of the solution).
 
 The MCQs used for different prompts and different reward types for self-evaluation can be found in ```reward.py```.
 
@@ -189,7 +189,7 @@ The MCQs used for different prompts and different reward types for self-evaluati
 Several types of answer voting mechanisms are implemented and automatically tracked simultaneously in ```main.py``` (not related to any ```argparse.py``` options). They are:
 
 1. **Majority Voting** (```Voted Answer``` in logs) - Just simple majority voting [1].
-2. **Reward Voting** (```Reward Voted Answer``` in logs) - Similar to majority voting, but the value of each vote is the reward of the corresponding answer path rather than just 1 for all,
+2. **Reward Voting** (```Reward Voted Answer``` in logs) - Similar to majority voting, but the value of each vote is the reward ($\in [0,1]$) of the corresponding answer path rather than just 1 for all,
 3. **Top K Reward Voting** (```Top K Reward Voted Answer``` in logs) - Selects Top K (we use K=5) highest rewarded answers then apply reward voting among them. This allows filtering potentially "bad" low-reward answers which can potentially add up to votes.
 4. **Max Reward** (```Max Reward Answer``` in logs) - Selects the answer with the maximum reward.
 
