@@ -98,19 +98,19 @@ Dataset References:
 ```
 ### Requirements
 * See ```requirements.txt``` (the main big 3 libraries are Huggingface Transformers, vLLM, and PyTorch - rest mostly being dependencies.)
-* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency.
+* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency but the latest version would probably work too.
 
 ### Model Setup
 
 The code base is mainly set up to work with vLLM compatible models. 
 
-* A few models like [LLAMA-instruct](https://huggingface.co/upstage/llama-30b-instruct-2048) and [Redmond](https://huggingface.co/NousResearch/Redmond-Puffin-13B) are already setup. But change the model weight paths as you need in ```model.py``` (see the constructor of generator class). I use locally downloaded checkpoints paths so it will not work out of the box unless you download the checkpoints in a similar path.
+* A few models like [LLAMA-instruct](https://huggingface.co/upstage/llama-30b-instruct-2048) and [Redmond](https://huggingface.co/NousResearch/Redmond-Puffin-13B) are already setup. But change the model weight paths as you need in ```model.py``` (see the constructor of generator class). I use locally downloaded checkpoints paths so it will not work out of the box unless you download the checkpoints in a similar path or change the path.
 
 If you want to add a new model (vLLM compatible) do the following:
 
 1. Add the model name in ```argparser.py``` for the ```model``` option.
 2. Add a prompt template for that specific model name in ```prompt.py``` (see examples in the end of the code file) (optional; there is a default prompt but probably wouldn't be optimal).  
-3. Associate the model name (the one you defined in the argparser) with a checkpoint path in ```model.py``` (see the constructor of generator class for examples).
+3. Associate the model name (the one you defined in the argparser) with a checkpoint path in ```model.py``` (see the constructor of generator class in that file for examples).
 
 ### Run
 
