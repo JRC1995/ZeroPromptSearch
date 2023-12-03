@@ -1,6 +1,6 @@
 ## Zero-Shot Prompts for Step Decomposition and Search
 
-This is more of an experimental/research projects. It implements a prompting pipeline combined with a wrapper for auto-decomposing steps and search through the step-space (eg. by beam search, MCTS etc.) guided by self-evaluation.
+This is more of an experimental/research project. It implements a prompting pipeline combined with a wrapper for auto-decomposing steps and searches through the "step space" (eg. by beam search, MCTS, etc.) guided by self-evaluation.
 
 ### Credits:
 
@@ -97,12 +97,12 @@ Dataset References:
 }
 ```
 ### Requirements
-* See ```requirements.txt``` (the main big 3 libraries are Huggingface Transformers, vLLM, and PyTorch - rest mostly being dependencies.)
-* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency but the latest version would probably work too.
+* See ```requirements.txt``` (the main big 3 libraries are Huggingface Transformers, vLLM, and PyTorch - the rest mostly being dependencies.)
+* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from the source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency but the latest version would probably work too.
 
 ### Model Setup
 
-The code base is mainly set up to work with vLLM compatible models. 
+The code base is mainly set up to work with vLLM-compatible models. 
 
 * A few models like [LLAMA-instruct](https://huggingface.co/upstage/llama-30b-instruct-2048) and [Redmond](https://huggingface.co/NousResearch/Redmond-Puffin-13B) are already setup. But change the model weight paths as you need in ```model.py``` (see the constructor of generator class). I use locally downloaded checkpoints paths so it will not work out of the box unless you download the checkpoints in a similar path or change the path.
 
@@ -110,7 +110,7 @@ If you want to add a new model (vLLM compatible) do the following:
 
 1. Add the model name in ```argparser.py``` for the ```model``` option.
 2. Add a prompt template for that specific model name in ```prompt.py``` (see examples in the end of the code file) (optional; there is a default prompt but probably wouldn't be optimal).  
-3. Associate the model name (the one you defined in the argparser) with a checkpoint path in ```model.py``` (see the constructor of generator class in that file for examples).
+3. Associate the model name (the one you defined in the argparser.py) with a checkpoint path in ```model.py``` (see the constructor of generator class in that file for examples).
 
 ### Run
 
@@ -124,7 +124,7 @@ Some other salient arguments:
 * ```checkpoint``` - set it true if you are loading some earlier saved checkpoints (checkpoints are automatically saved)
 * ```SC``` - set it true to enable self-consistency [1]. Only relevant if ```search_style=none```. 
 
-The available options for each arguments and the defaults can be found in ``argparser.py``.
+The available options for each argument and the defaults can be found in ``argparser.py``.
 
 ### Logs
 
@@ -132,8 +132,8 @@ You will find execution logs in ```logs/```
 
 ### Prompt Styles
 
-In this project, we employ various search strategies at the level of reasoning steps (each reasoning step count as "a single move in the game"). 
-This also raises the question of how to decompose the generation into a series of steps. One way to do that is to create any arbitrary prompt template with a clear structure (that can be used for parsing steps) and then use few shot examples with the template to prime the model to follow the structure. Here, however, I am interested in the zero-shot regime. I try to use zero-shot prompt instructions in specific ways to incite different forms of auto-decomposition of steps. Below, I discuss all the prompt styles used in this project and their corresponding decomposition methodology.
+In this project, we employ various search strategies at the level of reasoning steps (each reasoning step counts as "a single move in the game"). 
+This also raises the question of how to decompose the generation into a series of steps. One way to do that is to create any arbitrary prompt template with a clear structure (that can be used for parsing steps) and then use a few shot examples with the template to prime the model to follow the structure. Here, however, I am interested in the zero-shot regime. I try to use zero-shot prompt instructions in specific ways to incite different forms of auto-decomposition of steps. Below, I discuss all the prompt styles used in this project and their corresponding decomposition methodology.
 
 1. **Chain-of-Thoughts** (```cot```) - This uses the standard zero-shot COT prompt ```Let's think step by step.``` [2]. For step decomposition ```\n``` (new line) is used. There are some additional setups for properly ignoring empty new lines and such. Ultimately, this isn't necessarily an ideal way to decompose reasoning steps, not all new lines in the COT results would be complete reasoning steps but it's a baseline starting point that can be done in a zero-shot manner.
 
@@ -143,38 +143,38 @@ This also raises the question of how to decompose the generation into a series o
 
 4. **Tabular Chain-of-Thoughts** (```cot_tab```) - This is the zero-shot tabular cot prompt introduced in [4] - ```\n|step|subquestion|process|result|\n```. It's a simple way to produce a structured tabular format reasoning steps. We use newline for decomposition again but unlike before newline decomposition is more meaningful here - because each decomposed newline will correspond to a step in the table. 
 
-5. **Struct** (```struct```) - This prompt uses elements of many of the above prompts. It provides a detailed instruction to decompose the solution/answer into steps and substeps (with subproblem identification, relevant facts, and solution). This produces highly structured results and can be decomposed according the structure similar to ```cot```. Detailes of the prompt can be found in ```prompt.py``` and the dcomposition code can be found in ```node_transition.py```.
+5. **Struct** (```struct```) - This prompt uses elements of many of the above prompts. It provides detailed instructions to decompose the solution/answer into steps and substeps (with subproblem identification, relevant facts, and solution). This produces highly structured results and can be decomposed according to the structure similar to ```cot```. Details of the prompt can be found in ```prompt.py``` and the decomposition code can be found in ```node_transition.py```.
 
 6. **Struct Minimal** (```struct_min```) - It's similar to struct with one less substep. Details in ```prompt.py```. I haven't run this variant - there could be bugs. 
 
-You can modify ```prompt.py``` to add few shot prompts. 
+You can modify ```prompt.py``` to add a few shot prompts. 
 
 ### Search Styles
 
 All the search codes can be found in ```Search/```.
 
-* ```none``` - This methods don't apply any particular search strategy besides standard autoregressive greedy decoding. This can be combined with ```SC=True``` for self-consistency with multiple-sampling.
-* ```MultiSearch``` - This strategy uses multi-sampling. Then rewards for each samples (accumulative reward for each decomposed steps) are generated after the fact. Rewards are used for voting answers in various ways to be described later.
-* ```MultiGreedy``` - This strategy uses greedy search but at the level of steps (unlike ```none```). At every iteration, given the history chain of reasoning steps, the model generates some k next reasoning step candidates. Each of the k candidates are then scored (assigned a reward). Then the maximum scoring candidate is selected. This strategy is used in parallel for multiple samples of initial reasoning steps which leads to multiple search results which can be used for self-consistency. 
+* ```none``` - This method doesn't apply any particular search strategy besides standard autoregressive greedy decoding. This can be combined with ```SC=True``` for self-consistency with multiple sampling.
+* ```MultiSearch``` - This strategy uses multi-sampling. Then the rewards for each sample (accumulative reward for each decomposed step) are generated after the fact. Rewards are used for voting answers in various ways to be described later.
+* ```MultiGreedy``` - This strategy uses greedy search but at the level of steps (unlike ```none```). At every iteration, given the history chain of reasoning steps, the model generates some k next reasoning step candidates. Each of the k candidates are then scored (assigned a reward). Then the maximum-scoring candidate is selected. This strategy is used in parallel for multiple samples of initial reasoning steps which leads to multiple search results which can be used for self-consistency. 
   This search strategy can be thought of as similar to DFS from Tree of Thought [5] but without any backtracking.
-* ```BeamSearch``` - This is the beam search version of the above. The implementation is inspired from [6]. Moreover, this method can be thought of as similar to the BFS method (with truncated frontiers) used in Tree of Thought [5].
-* ```DivBeamSearch``` - This is same as beam search but encourages more diversity in generation by restricting siblings. In each iteration a maximum of m (m << beam size (I use m=2)) siblings are allowed. If there is space in the beam size after choosing all candidates following this restricting the residual candidates are added based on their rewards. The idea is similar in spirit to [7] but we don't strictly modify the equation of the scoring with a penalty - but use more of a hard constraint as described.
-* ```MCTS``` - This is Monte Carlo Tree Search. The implementation follows the structure [here](https://www.geeksforgeeks.org/ml-monte-carlo-tree-search-mcts/) roughly. It takes some inspirations from [8].
-* ```SPMCTS``` - This implementation (Semi-Parallel Monte Carlo Tree Search) parallelizes MCTS a bit more. It select multiple leafs at once and rolls out multiple paths at once. It takes fewer sequential iterations on the other hand. The end result is a similar number of samples as MCTS. The implementations are not computationally equivalent however and not intended to be.
+* ```BeamSearch``` - This is the beam search version of the above. The implementation is inspired by [6]. Moreover, this method can be thought of as similar to the BFS method (with truncated frontiers) used in Tree of Thought [5].
+* ```DivBeamSearch``` - This is the same as beam search but encourages more diversity in generation by restricting siblings. In each iteration a maximum of m (m << beam size (I use m=2)) siblings are allowed. If there is space in the beam size after choosing all candidates following this restricting the residual candidates are added based on their rewards. The idea is similar in spirit to [7] but we don't strictly modify the equation of the scoring with a penalty - but use more of a hard constraint as described.
+* ```MCTS``` - This is Monte Carlo Tree Search. The implementation follows the structure [here](https://www.geeksforgeeks.org/ml-monte-carlo-tree-search-mcts/) roughly. It takes some inspiration from [8].
+* ```SPMCTS``` - This implementation (Semi-Parallel Monte Carlo Tree Search) parallelizes MCTS a bit more. It selects multiple leaves at once and rolls out multiple paths at once. As such, it takes fewer sequential iterations. The end result is a similar number of samples as MCTS. The implementations are not computationally equivalent however and not intended to be.
 
-Note while some of the method are inspired by prior work, none of these are attempted to be perfectly faithful implementations of those papers for reproducibility. 
+Note while some of the methods are inspired by prior work, they are not attempted to be perfectly faithful implementations of those papers. 
 
 
 ### Reward Types
 
 Similar to [6,8] the reward for each step is calculated based on self-evaluation and confidence of generation of the step (based on logprobs). 
-The self-evaluation technique uses LLMs to evaluate its own generations by asking multi-choice questions asking about the helpfulness/correctness of the step.
+The self-evaluation technique uses LLMs to evaluate its own generations by asking multi-choice questions (MCQ) about the helpfulness/correctness of the step (the self-evaluation questions can be found in ```rewards.py```).
 
 Different types of reward types and combos are available as arguments in ```argparse.py```.
 
-* ```confidence``` - Only uses confidence as rewards.
-* ```correctness``` - Only uses answer probabilities from a step correctness-related MCQ as reward.
-* ```helpfulness``` - Only uses answer probabilities from a step helpfulness-related MCQ as reward
+* ```confidence``` - Only uses confidence (based on logprobs) as the reward.
+* ```correctness``` - Only uses answer probabilities from a step correctness-related MCQ as the reward.
+* ```helpfulness``` - Only uses answer probabilities from a step helpfulness-related MCQ as the reward
 * ```both``` - Uses both ```correctness``` and ```helpfulness```.
 * ```confidence+correctness``` - Uses both ```confidence``` and ```correctness```.
 * ```confidence+helpfulness``` - Uses both ```confidence``` and ```helpfulness```.
@@ -190,15 +190,15 @@ Several types of answer voting mechanisms are implemented and automatically trac
 
 1. **Majority Voting** (```Voted Answer``` in logs) - Just simple majority voting [1].
 2. **Reward Voting** (```Reward Voted Answer``` in logs) - Similar to majority voting, but the value of each vote is the reward ($\in [0,1]$) of the corresponding answer path rather than just 1 for all,
-3. **Top K Reward Voting** (```Top K Reward Voted Answer``` in logs) - Selects Top K (we use K=5) highest rewarded answers then apply reward voting among them. This allows filtering potentially "bad" low-reward answers which can potentially add up to votes.
-4. **Max Reward** (```Max Reward Answer``` in logs) - Selects the answer with the maximum reward.
+3. **Top K Reward Voting** (```Top K Reward Voted Answer``` in logs) - Select Top K (we use K=5) highest rewarded answers then apply reward voting among them. This allows filtering potentially "bad" low-reward answers which can potentially add up to votes.
+4. **Max Reward** (```Max Reward Answer``` in logs) - Select the answer with the maximum reward.
 
 ### Limitations
 
-* **Bugs** - The project is more of an experimental prototype. There can be some bugs in the more sophisticated search strategies. They do run, but there can be some implementation issues that I may need to double check. Personally, I didn't have much luck with the more sophisticated methods in some toy runs. Generally just none or none+SC works pretty well with hard to beat results.
-* **Batch** - There isn't any batching in the code. It executes one sample at a time. There are some internal batching in SPMCTS, BeamSearch or such for parallely running rewards in multiple children, or getting child candidates for multiple parent nodes in the beam. But all that are related to a single question/prompt. I also tried to parallelize some aspects of ```node_transition.py``` a bit more (particularly the reward computation) but didn't get much beneifit in empirical time cost.
-* **Cache** - One limitation that bottlenecks the performance of these models is presumably the lack of reuse of Key-value caching. To get rewards, I have to generally terminate after a reasoning step is calculated. This resets the cache for future generation. Moreover reward generation (self-evaluation) requires rebuilding cache. All these requires rebuilding of the KV cache multiple times. Better cache reuse may significantly speed up the search stragies besides ```none``` (which is currently the fastest). But this may require modifying vLLM and huggingface Transformers.
-* **Documentation** - I need to add more documentation (here or in a paper). But in the meantime, for any question or anything else contact the email (linked to my github account).
+* **Bugs** - The project is more of an experimental prototype. There can be some bugs in the more sophisticated search strategies. They do run, but there can be some implementation issues that I may need to double-check. Personally, I didn't have much luck with the more sophisticated methods in some toy runs. Generally, just none or none+SC works pretty well with hard-to-beat results.
+* **Batch** - There isn't any batching in the code. It executes one sample at a time. There is some internal batching in SPMCTS, BeamSearch, or such for parallelly running rewards in multiple children, or getting child candidates for multiple parent nodes in the beam. But all that is related to a single question/prompt. I also tried to parallelize some aspects of ```node_transition.py``` a bit more (particularly the reward computation) but didn't get much benefit in empirical time cost.
+* **Cache** - One limitation that bottlenecks the performance of these models is presumably the lack of reuse of Key-value caching. To get rewards, I have to generally terminate after a reasoning step is calculated. This resets the cache for future generations. Moreover, reward generation (self-evaluation) requires rebuilding the cache. All of these require rebuilding the KV cache multiple times. Better cache reuse may significantly speed up the search strategies besides ```none``` (which is currently the fastest). But this may require modifying vLLM and huggingface Transformers.
+* **Documentation** - I need to add more documentation (here or in a paper). But in the meantime, for any questions or anything else contact the email (linked to my GitHub account).
 * **Misc** - It also goes without saying there are other endless things that can be added like complexity-based weighing, automatically retrieving examples with synthetic ground truth (bootstrapping) for few shot prompts, or multi-agent debate to name a few. 
 
 ### Related Works
