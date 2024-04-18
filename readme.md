@@ -98,7 +98,7 @@ Dataset References:
 ```
 ### Requirements
 * See ```requirements.txt``` (the main big 3 libraries are Huggingface Transformers, vLLM, and PyTorch - the rest mostly being dependencies.)
-* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from the source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency but the latest version would probably work too.
+* [vLLM](https://vllm.readthedocs.io/en/latest/) needs to be built from the source at the moment. Use this [branch](https://github.com/vllm-project/vllm/tree/6fc2a38b110f9ba6037b31ee016f20df32426877) for consistency.
 
 ### Model Setup
 
