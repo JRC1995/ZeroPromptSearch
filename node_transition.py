@@ -121,7 +121,7 @@ class node_transition:
                         dict_chains[reason_chain] = 1
                     new_node = Node()
                     new_node.parent = parent_node
-                    if self.prompt_style == "struct":
+                    if self.prompt_style in ["struct", "struct-mini"]:
                         if substep_num == 1:
                             flag_str = "STEP {} ".format(step + 1)
                             if reason_chain[-len(flag_str):] == flag_str:
