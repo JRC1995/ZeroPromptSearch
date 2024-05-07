@@ -33,7 +33,7 @@ def MultiSearch(args: any, prompt: str, generator: generator_class) -> any:
         ext = "Step 1: "
         ext_prompt = prompt + ext
         delimiter = "Step"
-    elif args.prompt_style == "struct":
+    elif args.prompt_style in ["struct", "struct_mini"]:
         ext = "STEP 1 (Subproblem): "
         ext_prompt = prompt + ext
         delimiter = "STEP"
